@@ -19,22 +19,49 @@ public class gameManager : MonoBehaviour {
     public GameObject RoundCountdownParent;
     public Text RoundCountdown;
     public GameObject StartButton;
+    public GameObject settingsMenu;
+    public InputField jumpSpeed;
+    public InputField movementWait;
+    public InputField roundDuration;
 
     private int timeCount = 60;
     private int player1WinCount = 0;
     private int player2WinCount = 0;
-	
-	void Start ()
+    private float playerSpeed = 0.125f;
+    private float playerWait = 1.0f;
+
+    void Start ()
     {
 
-        timeRemaining.text = timeCount.ToString();
         StartButton.SetActive(true);
+        settingsMenu.SetActive(true);
 	
 	}
 
 
     public void StartGame ()
     {
+        if (roundDuration.text != "")
+            timeCount = int.Parse(roundDuration.text);
+
+        timeRemaining.text = timeCount.ToString();
+
+        if (jumpSpeed.text != "")
+        {
+            playerSpeed = float.Parse(jumpSpeed.text);
+
+            GameObject.Find("player1").GetComponent<playerControl>().SetPlayerSpeed(playerSpeed);
+            GameObject.Find("player2").GetComponent<playerControl>().SetPlayerSpeed(playerSpeed);
+        }
+
+        if (movementWait.text != "")
+        {
+            playerWait = float.Parse(movementWait.text);
+
+            GameObject.Find("player1").GetComponent<playerControl>().SetMovementWait(playerWait);
+            GameObject.Find("player2").GetComponent<playerControl>().SetMovementWait(playerWait);
+        }
+
         StartCoroutine(BeginRound());
     }
 
@@ -43,6 +70,7 @@ public class gameManager : MonoBehaviour {
     {
         StartButton.SetActive(false);
         RoundCountdownParent.SetActive(true);
+        settingsMenu.SetActive(false);
 
         RoundCountdown.text = "3";
         yield return new WaitForSeconds(1.0f);

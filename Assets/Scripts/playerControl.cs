@@ -21,8 +21,11 @@ public class playerControl : MonoBehaviour {
     private int currentFloat = 0;
 	private float xPos;
 	private float yPos;
+    private float playerSpeed = 0.125f;
+    private float delayPeriod = 1.0f;
 	private bool resetJoystick = true;
 	private bool moveOffScreen = false;
+    private bool once = false;
 	private string moveDirection = "";
 	private GameObject[] iceFloats = new GameObject[35];
 	private Vector3 targetPos = new Vector3(-100, -100, -100);
@@ -52,6 +55,18 @@ public class playerControl : MonoBehaviour {
 		canMove = true;
 	
 	}
+
+
+    public void SetPlayerSpeed (float speed)
+    {
+        playerSpeed = speed;
+    }
+
+
+    public void SetMovementWait (float duration)
+    {
+        delayPeriod = duration;
+    }
 
 
 	void MovePlayer(string direction)
@@ -112,7 +127,8 @@ public class playerControl : MonoBehaviour {
         if (hit.gameObject.tag == "Player")
         {
             //need to account for both players moving at the same time, running into each other
-            if (isMoving == true && hit.gameObject.GetComponent<playerControl>().isMoving == false && hit.gameObject.GetComponent<playerControl>().hasFallen == false)
+            if (isMoving == true && hit.gameObject.GetComponent<playerControl>().isMoving == false && hit.gameObject.GetComponent<playerControl>().hasFallen == false
+                && hit.gameObject.GetComponent<Renderer>().enabled == true)
             {
                 if (moveDirection == "right")
                 {
@@ -238,6 +254,15 @@ public class playerControl : MonoBehaviour {
     }
 
 
+    private IEnumerator DelayNextMove (float duration)
+    {
+        yield return new WaitForSeconds(duration);
+
+        canMove = true;
+        once = false;
+    }
+
+
     void Update()
     {
 
@@ -294,7 +319,7 @@ public class playerControl : MonoBehaviour {
                 {
                     if (gameObject.transform.position != deathTargetPos)
                     {
-                        gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, deathTargetPos, 0.125f);
+                        gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, deathTargetPos, playerSpeed);
 
                         if (Vector3.Distance(gameObject.transform.position, deathTargetPos) < 0.05f)
                         {
@@ -315,16 +340,21 @@ public class playerControl : MonoBehaviour {
                         {
                             if (gameObject.transform.position != targetPos)
                             {
+                                gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, targetPos, playerSpeed);
+
                                 if (Vector3.Distance(gameObject.transform.position, targetPos) < 0.05f)
                                 {
                                     isMoving = false;
+                                    gameObject.transform.position = targetPos;
                                 }
-
-                                gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, targetPos, 0.125f);
                             }
                             else
                             {
-                                canMove = true;
+                                if (once == false)
+                                {
+                                    StartCoroutine(DelayNextMove(delayPeriod));
+                                    once = true;
+                                }
                             }
                         }
 
@@ -334,7 +364,7 @@ public class playerControl : MonoBehaviour {
                         if (moveDirection == "right")
                         {
                             if (gameObject.GetComponent<Renderer>().isVisible == true)
-                                gameObject.transform.Translate(Vector3.right * 0.175f);
+                                gameObject.transform.Translate(Vector3.right * playerSpeed);
                             else
                             {
                                 gameObject.transform.position = new Vector3(-12.0f, transform.position.y, 0.0f);
@@ -344,7 +374,7 @@ public class playerControl : MonoBehaviour {
                         else if (moveDirection == "left")
                         {
                             if (gameObject.GetComponent<Renderer>().isVisible == true)
-                                gameObject.transform.Translate(Vector3.left * 0.175f);
+                                gameObject.transform.Translate(Vector3.left * playerSpeed);
                             else
                             {
                                 gameObject.transform.position = new Vector3(12.0f, transform.position.y, 0.0f);
@@ -354,7 +384,7 @@ public class playerControl : MonoBehaviour {
                         else if (moveDirection == "up")
                         {
                             if (gameObject.GetComponent<Renderer>().isVisible == true)
-                                gameObject.transform.Translate(Vector3.up * 0.175f);
+                                gameObject.transform.Translate(Vector3.up * playerSpeed);
                             else
                             {
                                 gameObject.transform.position = new Vector3(transform.position.x, -8.0f, 0.0f);
@@ -364,7 +394,7 @@ public class playerControl : MonoBehaviour {
                         else if (moveDirection == "down")
                         {
                             if (gameObject.GetComponent<Renderer>().isVisible == true)
-                                gameObject.transform.Translate(Vector3.down * 0.175f);
+                                gameObject.transform.Translate(Vector3.down * playerSpeed);
                             else
                             {
                                 gameObject.transform.position = new Vector3(transform.position.x, 8.0f, 0.0f);
